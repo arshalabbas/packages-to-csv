@@ -10,9 +10,14 @@ const outputDir = path.resolve(__dirname, "output.csv");
  */
 function generateCsv(packagesPaths) {
   // CSV Headers
-  fs.writeFileSync(outputDir, "package_name, version\n", { encoding: "utf-8" });
+  fs.writeFileSync(outputDir, "author name, package name, version\n", {
+    encoding: "utf-8",
+  });
 
-  let dependencies = {};
+  /**
+   * @type {{ author: string; package: string; version: string; }[]}
+   */
+  let dependencies = [];
 
   // Iterating each paths
   for (const packagePath of packagesPaths) {
@@ -27,19 +32,29 @@ function generateCsv(packagesPaths) {
 
     // Iterating each packages and checking the version
     for (let package in data.dependencies) {
-      if (dependencies[package]) {
-        if (
-          checkVersion(data.dependencies[package], dependencies[package]) > 0
-        ) {
+      const existing = dependencies.find((item) => item.package === package);
+      if (existing) {
+        if (checkVersion(data.dependencies[package], existing.version) > 0) {
           console.log(
-            `⬆️ ${package}: ${dependencies[package]} <= ${data.dependencies[package]}`
+            `⬆️ ${package}: ${existing.version} <= ${data.dependencies[package]}`
           );
-          dependencies[package] = data.dependencies[package];
+          dependencies = [
+            ...dependencies.filter((item) => item.package !== package),
+            {
+              author: data.author,
+              package,
+              version: data.dependencies[package],
+            },
+          ];
         }
         continue;
       }
       console.log(`🆕 ${package}: ${data.dependencies[package]}`);
-      dependencies[package] = data.dependencies[package];
+      dependencies.push({
+        author: data.author,
+        package,
+        version: data.dependencies[package],
+      });
     }
   }
 
@@ -71,21 +86,27 @@ function checkVersion(version1, version2) {
 /**
  * Write the dependecies data to the output csv file.
  *
- * @param {Record<string, string>} dependencies - Dependencies to write to the csv file.
+ * @param {{ author: string; package: string; version: string }[]} dependencies - Dependencies to write to the csv file.
  * @param {string} outputDir - Output directory path of the csv.
  */
 function writeToCsv(dependencies, outputDir) {
-  for (let package in dependencies) {
-    fs.appendFileSync(outputDir, `${package}, ${dependencies[package]}\n`, {
-      encoding: "utf-8",
-    });
-  }
+  dependencies.forEach((item) => {
+    fs.appendFileSync(
+      outputDir,
+      `${item.author}, ${item.package}, ${item.version}\n`,
+      {
+        encoding: "utf-8",
+      }
+    );
+  });
 }
 
 const packagesPaths = [
   "./package/package-1.json",
   "./package/package-2.json",
   "./package/package-3.json",
+  "./package/package-4.json",
+  "./package/package-5.json",
 ];
 
 generateCsv(packagesPaths);
