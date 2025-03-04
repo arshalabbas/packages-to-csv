@@ -1,0 +1,12 @@
+{
+  "name": "project3",
+  "version": "1.0.0",
+  "description": "A full-featured Node.js application with various modules.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest"
+  },
+  "author": "Alice Johnson",
+  "license": "MIT"
+}
